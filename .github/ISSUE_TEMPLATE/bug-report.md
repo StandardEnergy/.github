@@ -2,7 +2,6 @@
 name: 버그 보고
 about: 버그를 신고할 때 사용하세요
 title: "[Bug]: "
-assignees: ""
 ---
 
 ## 설명

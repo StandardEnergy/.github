@@ -2,7 +2,6 @@
 name: 기능 요청
 about: 새로운 기능을 제안할 때 사용하세요
 title: "[Feature]: "
-assignees: ""
 ---
 
 ## 개요
