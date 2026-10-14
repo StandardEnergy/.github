@@ -54,7 +54,7 @@
    - 권한: `contents`, `pull-requests`, `issues`(릴리스 PR 라벨 생성) `write`
    - `concurrency` 지정 (`cancel-in-progress: false`) → 연속 병합 시 릴리스 PR 갱신, 태그 생성 순차 실행
    - `googleapis/release-please-action` 입력: `config-file`, `manifest-file`에 위 파일 지정
-   - action 버전은 커밋 SHA로 고정 ([주의 사항](#주의-사항) 참고)
+   - action 버전은 최신 릴리스 확인 후 커밋 SHA로 고정 ([주의 사항](#주의-사항) 참고)
 3. `release-please-config.json` 수정
    - `package-name`: 프로젝트 명
    - `release-type`: 프로젝트 유형에 맞게 지정 ([release-type 선택](#release-type-선택) 참고)
@@ -129,8 +129,42 @@ version = '0.0.1-SNAPSHOT' // x-release-please-version
 ### 릴리스 산출물 첨부
 
 - release-please job 이후 후속 job에서 빌드 단계 작성
-- release-please job 출력값 활용: `release_created`(릴리스 생성 여부), `tag_name`(`vX.Y.Z`)
+- release-please 출력값 활용: `release_created`(릴리스 생성 여부), `tag_name`(`vX.Y.Z`)
+  - step 출력은 후속 job에서 직접 참조 불가 → release-please job의 `outputs`로 승격 후 `needs.<job>.outputs.*`로 참조
 - Release asset 업로드: `gh release upload "${TAG_NAME}" <파일> --clobber` 또는 `softprops/action-gh-release`
+  - `gh` CLI 사용 시 step `env`에 `GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` 지정 필요 (Actions 토큰 자동 인증 미지원)
+  - self-hosted 러너는 `gh` CLI 설치 여부 확인
+- 아래 예시의 action 버전은 작성 시점(2026-10) 기준 → 적용 시 각 action 저장소 Releases에서 최신 버전 확인 후 커밋 SHA 갱신
+
+```yaml
+jobs:
+  release_please:
+    runs-on: self-hosted
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  upload_release_asset:
+    needs: release_please
+    if: ${{ needs.release_please.outputs.release_created == 'true' }}
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.release_please.outputs.tag_name }}
+      # 빌드 단계 생략
+      - name: Release asset 업로드
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ needs.release_please.outputs.tag_name }}
+        run: gh release upload "${TAG_NAME}" dist/* --clobber
+```
 - 빌드 실패 대비: `workflow_dispatch` 입력으로 태그를 받아 재빌드/재첨부하는 경로 마련 권장
 
 ## 주의 사항
