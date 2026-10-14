@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "include-component-in-tag": false,
-  "pull-request-title-pattern": "chore: release v${version}",
+  "pull-request-title-pattern": "chore${scope}: release v${version}",
   "pull-request-header": "릴리스 PR — 병합 시 태그(vX.Y.Z) 및 GitHub Release 생성",
   "packages": {
     ".": {

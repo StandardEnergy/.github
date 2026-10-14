@@ -25,7 +25,7 @@
 
 ## 동작 흐름
 
-1. 기본 브랜치(`main`)에 PR 병합 → 릴리스 PR(`chore: release vX.Y.Z`) 자동 생성/갱신
+1. 기본 브랜치(`main`)에 PR 병합 → 릴리스 PR(`chore(main): release vX.Y.Z`) 자동 생성/갱신
    - 변경 내용: 다음 버전, release-type별 버전 파일(`package.json` 등), `CHANGELOG.md`, `.release-please-manifest.json`
    - 이후 병합되는 PR도 같은 릴리스 PR에 누적
 2. 릴리스 PR 병합 → 태그(`vX.Y.Z`) 및 GitHub Release 자동 생성
@@ -72,7 +72,7 @@
 | 항목 | 샘플 값 | 설명 |
 | --- | --- | --- |
 | `include-component-in-tag` | `false` | 태그 형식 `vX.Y.Z` (기본값 `<컴포넌트>-vX.Y.Z`) |
-| `pull-request-title-pattern` | `chore: release v${version}` | 릴리스 PR 제목, 조직 PR 제목 규칙(Conventional Commits)과 일치 |
+| `pull-request-title-pattern` | `chore${scope}: release v${version}` | 릴리스 PR 제목, 조직 PR 제목 규칙(Conventional Commits)과 일치 (`${scope}` → 대상 브랜치, 예: `(main)`) |
 | `pull-request-header` | `릴리스 PR — ...` | 릴리스 PR 본문 상단 안내 문구 (기본값은 영문) |
 | `release-type` | `<프로젝트 유형>` | 버전 갱신 대상 파일 결정 (필수, [release-type 선택](#release-type-선택) 참고) |
 | `package-name` | `<프로젝트 명>` | 릴리스 PR, CHANGELOG에 표시되는 이름 |
@@ -154,7 +154,7 @@ version = '0.0.1-SNAPSHOT' // x-release-please-version
   - `feat` → MINOR, 그 외 CHANGELOG 노출 접두어 → PATCH, `!` 표기 → MAJOR
   - `ci`, `chore`, `test`, `style`: CHANGELOG 제외, 단독으로는 릴리스 PR 미생성
 - 릴리스 흐름
-  1. `main` 병합 시 릴리스 PR(`chore: release vX.Y.Z`) 자동 생성/갱신
+  1. `main` 병합 시 릴리스 PR(`chore(main): release vX.Y.Z`) 자동 생성/갱신
   2. 릴리스 PR 병합 시 태그(`vX.Y.Z`) 및 GitHub Release 자동 생성
 - 설정: `release-please-config.json`, 현재 버전: `.release-please-manifest.json`
 ```
