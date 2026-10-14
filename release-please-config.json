@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "include-component-in-tag": false,
+  "pull-request-title-pattern": "chore${scope}: release v${version}",
+  "pull-request-header": "릴리스 PR — 병합 시 태그(vX.Y.Z) 및 GitHub Release 생성",
+  "packages": {
+    ".": {
+      "release-type": "<프로젝트 유형>",
+      "package-name": "<프로젝트 명>",
+      "changelog-path": "CHANGELOG.md",
+      "changelog-sections": [
+        { "type": "feat", "section": "새 기능" },
+        { "type": "fix", "section": "버그 수정" },
+        { "type": "perf", "section": "성능 개선" },
+        { "type": "revert", "section": "되돌리기" },
+        { "type": "refactor", "section": "리팩터링" },
+        { "type": "build", "section": "빌드" },
+        { "type": "docs", "section": "문서" },
+        { "type": "ci", "section": "CI/CD", "hidden": true },
+        { "type": "chore", "section": "기타", "hidden": true },
+        { "type": "test", "section": "테스트", "hidden": true },
+        { "type": "style", "section": "스타일", "hidden": true }
+      ]
+    }
+  }
+}
