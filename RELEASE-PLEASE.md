@@ -54,7 +54,7 @@
    - 권한: `contents`, `pull-requests`, `issues`(릴리스 PR 라벨 생성) `write`
    - `concurrency` 지정 (`cancel-in-progress: false`) → 연속 병합 시 릴리스 PR 갱신, 태그 생성 순차 실행
    - `googleapis/release-please-action` 입력: `config-file`, `manifest-file`에 위 파일 지정
-   - action 버전은 커밋 SHA로 고정 ([주의 사항](#주의-사항) 참고)
+   - action 버전은 최신 릴리스 확인 후 커밋 SHA로 고정 ([주의 사항](#주의-사항) 참고)
 3. `release-please-config.json` 수정
    - `package-name`: 프로젝트 명
    - `release-type`: 프로젝트 유형에 맞게 지정 ([release-type 선택](#release-type-선택) 참고)
@@ -134,6 +134,7 @@ version = '0.0.1-SNAPSHOT' // x-release-please-version
 - Release asset 업로드: `gh release upload "${TAG_NAME}" <파일> --clobber` 또는 `softprops/action-gh-release`
   - `gh` CLI 사용 시 step `env`에 `GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` 지정 필요 (Actions 토큰 자동 인증 미지원)
   - self-hosted 러너는 `gh` CLI 설치 여부 확인
+- 아래 예시의 action 버전은 작성 시점(2026-10) 기준 → 적용 시 각 action 저장소 Releases에서 최신 버전 확인 후 커밋 SHA 갱신
 
 ```yaml
 jobs:
