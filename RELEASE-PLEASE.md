@@ -11,7 +11,6 @@
 - [release-type 선택](#release-type-선택)
 - [주의 사항](#주의-사항)
 - [프로젝트 README 기재 예시](#프로젝트-readme-기재-예시)
-- [조직 내 적용 현황](#조직-내-적용-현황)
 
 ---
 
@@ -82,6 +81,7 @@
 | `initial-version` | (미지정) | 첫 릴리스 버전, 미지정 시 `1.0.0` |
 | `bootstrap-sha` | (미지정) | 첫 릴리스 PR의 커밋 수집 시작점 |
 
+- 샘플에 없는 접두어(예: `change`) 사용 시 `changelog-sections`에 항목 추가
 - JSON 파일 특성상 주석 불가 → 설정 의도는 workflow 주석 또는 프로젝트 README에 기재
 - 전체 항목: [config.json 스키마](https://github.com/googleapis/release-please/blob/main/schemas/config.json), [manifest-releaser 문서](https://github.com/googleapis/release-please/blob/main/docs/manifest-releaser.md)
 
@@ -158,23 +158,3 @@ version = '0.0.1-SNAPSHOT' // x-release-please-version
   2. 릴리스 PR 병합 시 태그(`vX.Y.Z`) 및 GitHub Release 자동 생성
 - 설정: `release-please-config.json`, 현재 버전: `.release-please-manifest.json`
 ```
-
-## 조직 내 적용 현황
-
-- 기준일: 2026-10-14
-
-| 저장소 | release-type | 태그 | 릴리스 PR 제목 | 버전 파일 | 후속 작업 | action 고정 |
-| --- | --- | --- | --- | --- | --- | --- |
-| batman | `node` | `vX.Y.Z` | 기본값 (`chore(main): release X.Y.Z`) | `package.json` | 없음 | SHA |
-| INANDOUT | `node` | `vX.Y.Z` | `chore: release v${version}` | `package.json` | 없음 (태그 기준 배포 별도) | SHA |
-| fss | `node` | `vX.Y.Z` | `chore: v${version} 릴리스` | `package.json` | 없음 (배포 수동 실행) | `@v5` |
-| batman-robin | `simple` | `vX.Y.Z` | 기본값 | 없음 (빌드 시 태그 주입, 인스톨러는 매니페스트 참조) | exe/인스톨러 빌드 후 Release asset 첨부 | `@v5` |
-| se-ess-lpms | `simple` | `vX.Y.Z` | `chore: release v${version}` | `version.txt`, `client/package.json`, `server/build.gradle` | 배포 패키지 빌드 후 Release asset 첨부 | `@v5` |
-
-- 공통: `main` push 트리거, self-hosted 러너, `concurrency` 순차 실행, 태그 `vX.Y.Z`
-- 샘플 반영 기준
-  - release-type: 저장소별 구성 상이(`node`, `simple`) → 고정하지 않고 프로젝트별 지정
-  - 릴리스 PR 제목: 다수 사용 형식(`chore: release v${version}`) 채택
-  - CHANGELOG 분류: 3개 저장소 공통 구성 기준으로 통일, 표기는 `리팩터링`(국립국어원 표준) 채택
-  - 비표준 접두어 `change`(INANDOUT, se-ess-lpms 사용)는 제외 → 필요 시 `changelog-sections`에 추가
-  - action 고정: SHA 고정 방식 권장
