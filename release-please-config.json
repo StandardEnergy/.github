@@ -5,7 +5,7 @@
   "pull-request-header": "릴리스 PR — 병합 시 태그(vX.Y.Z) 및 GitHub Release 생성",
   "packages": {
     ".": {
-      "release-type": "node",
+      "release-type": "<프로젝트 유형>",
       "package-name": "<프로젝트 명>",
       "changelog-path": "CHANGELOG.md",
       "changelog-sections": [

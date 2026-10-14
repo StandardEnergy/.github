@@ -8,7 +8,7 @@
 - [동작 흐름](#동작-흐름)
 - [적용 방법](#적용-방법)
 - [설정 항목](#설정-항목)
-- [프로젝트 유형별 변형](#프로젝트-유형별-변형)
+- [release-type 선택](#release-type-선택)
 - [주의 사항](#주의-사항)
 - [프로젝트 README 기재 예시](#프로젝트-readme-기재-예시)
 - [조직 내 적용 현황](#조직-내-적용-현황)
@@ -27,7 +27,7 @@
 ## 동작 흐름
 
 1. 기본 브랜치(`main`)에 PR 병합 → 릴리스 PR(`chore: release vX.Y.Z`) 자동 생성/갱신
-   - 변경 내용: 다음 버전, `package.json` 등 버전 파일, `CHANGELOG.md`, `.release-please-manifest.json`
+   - 변경 내용: 다음 버전, release-type별 버전 파일(`package.json` 등), `CHANGELOG.md`, `.release-please-manifest.json`
    - 이후 병합되는 PR도 같은 릴리스 PR에 누적
 2. 릴리스 PR 병합 → 태그(`vX.Y.Z`) 및 GitHub Release 자동 생성
 3. (필요 시) 후속 job에서 태그 기준 빌드, Release asset 첨부, 배포
@@ -58,7 +58,7 @@
    - action 버전은 커밋 SHA로 고정 ([주의 사항](#주의-사항) 참고)
 3. `release-please-config.json` 수정
    - `package-name`: 프로젝트 명
-   - `release-type`: 프로젝트 유형에 맞게 변경 ([프로젝트 유형별 변형](#프로젝트-유형별-변형) 참고)
+   - `release-type`: 프로젝트 유형에 맞게 지정 ([release-type 선택](#release-type-선택) 참고)
 4. 기존 이력 유무에 따라 시작 시점 지정
    - 신규 저장소: 매니페스트 `{}` 유지, 첫 릴리스 버전은 `initial-version`(기본 `1.0.0`)
    - 기존 버전이 있는 저장소: 매니페스트에 현재 버전 기재 (예: `{ ".": "1.3.0" }`)
@@ -75,7 +75,7 @@
 | `include-component-in-tag` | `false` | 태그 형식 `vX.Y.Z` (기본값 `<컴포넌트>-vX.Y.Z`) |
 | `pull-request-title-pattern` | `chore: release v${version}` | 릴리스 PR 제목, 조직 PR 제목 규칙(Conventional Commits)과 일치 |
 | `pull-request-header` | `릴리스 PR — ...` | 릴리스 PR 본문 상단 안내 문구 (기본값은 영문) |
-| `release-type` | `node` | 버전 갱신 대상 파일 결정 (`node` → `package.json`, `package-lock.json`) |
+| `release-type` | `<프로젝트 유형>` | 버전 갱신 대상 파일 결정 (필수, [release-type 선택](#release-type-선택) 참고) |
 | `package-name` | `<프로젝트 명>` | 릴리스 PR, CHANGELOG에 표시되는 이름 |
 | `changelog-path` | `CHANGELOG.md` | CHANGELOG 파일 경로 |
 | `changelog-sections` | 11개 접두어 | 접두어별 CHANGELOG 제목(한국어), `hidden: true` 시 미노출 및 버전 증가 대상 제외 |
@@ -85,12 +85,30 @@
 - JSON 파일 특성상 주석 불가 → 설정 의도는 workflow 주석 또는 프로젝트 README에 기재
 - 전체 항목: [config.json 스키마](https://github.com/googleapis/release-please/blob/main/schemas/config.json), [manifest-releaser 문서](https://github.com/googleapis/release-please/blob/main/docs/manifest-releaser.md)
 
-## 프로젝트 유형별 변형
+## release-type 선택
 
-### Node.js 외 프로젝트 (Go, Java 등)
+- 릴리스 PR에서 갱신할 버전 기록 파일 결정 (버전 계산, CHANGELOG, 태그/Release 생성은 유형 무관 동일)
+- 프로젝트 구성에 맞게 지정 → 샘플 값(`<프로젝트 유형>`) 그대로 사용 불가
 
-- `release-type: simple` 사용 → `CHANGELOG.md`, 루트 `version.txt`(파일 존재 시) 갱신
-- 그 외 버전 파일은 `extra-files`로 추가
+| release-type | 갱신 대상 파일 | 적합한 프로젝트 |
+| --- | --- | --- |
+| `node` | `package.json`, `package-lock.json` | Node.js, 프론트엔드 |
+| `go` | 없음 (CHANGELOG만 갱신) | Go (버전은 태그 기준 관리) |
+| `maven` | `pom.xml` 등 | Maven 기반 Java |
+| `python` | `pyproject.toml`, `setup.py`, `setup.cfg` 등 | Python |
+| `rust` | `Cargo.toml`, `Cargo.lock` | Rust |
+| `helm` | `Chart.yaml` | Helm 차트 |
+| `simple` | 루트 `version.txt` (파일 존재 시) | 전용 유형이 없거나 여러 언어가 섞인 프로젝트 |
+
+- 그 외 지원 유형: [release-please 지원 유형 목록](https://github.com/googleapis/release-please#strategy-language-types-supported)
+- 선택 기준
+  - 단일 언어 + 전용 유형 존재: 해당 유형 사용
+  - 전용 유형 없음(Gradle 등) 또는 혼합 구성(서버 + 클라이언트 등): `simple` + `extra-files`
+
+### extra-files
+
+- release-type이 처리하지 못하는 버전 파일 추가 지정
+- 형식: `json`, `yaml`, `toml`, `xml`(경로 지정), `generic`(주석 표기)
 
 ```json
 "release-type": "simple",
@@ -155,6 +173,7 @@ version = '0.0.1-SNAPSHOT' // x-release-please-version
 
 - 공통: `main` push 트리거, self-hosted 러너, `concurrency` 순차 실행, 태그 `vX.Y.Z`
 - 샘플 반영 기준
+  - release-type: 저장소별 구성 상이(`node`, `simple`) → 고정하지 않고 프로젝트별 지정
   - 릴리스 PR 제목: 다수 사용 형식(`chore: release v${version}`) 채택
   - CHANGELOG 분류: 3개 저장소 공통 구성 기준으로 통일, 표기는 `리팩터링`(국립국어원 표준) 채택
   - 비표준 접두어 `change`(INANDOUT, se-ess-lpms 사용)는 제외 → 필요 시 `changelog-sections`에 추가
