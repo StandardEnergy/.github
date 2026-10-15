@@ -1,7 +1,7 @@
 ---
 name: 🔬 사전 조사
 about: 기능 설계/구현에 앞서 기술이나 방안을 조사할 때 사용하세요
-title: "[Research]: "
+title: ""
 type: Research
 ---
 

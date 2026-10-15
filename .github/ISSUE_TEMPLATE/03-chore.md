@@ -1,7 +1,7 @@
 ---
 name: 🔧 작업
 about: 설정 변경, 정리 등 소소한 작업을 등록할 때 사용하세요
-title: "[Chore]: "
+title: ""
 type: Chore
 ---
 
