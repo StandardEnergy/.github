@@ -43,30 +43,34 @@
 | `fix`, `perf`, `revert`, `refactor`, `build` | PATCH | 노출 |
 | `docs`, `ci`, `chore`, `test`, `style` | 없음 (단독 병합 시 릴리스 PR 미생성) | 미노출 |
 
-- 버전 직접 지정: 커밋 본문에 `Release-As: X.Y.Z` footer 추가 (CHANGELOG 노출 접두어 커밋 한정)
+- 버전 직접 지정: 커밋 본문에 `Release-As: X.Y.Z` footer 추가 (CHANGELOG 노출 접두어 커밋 한정, `docs`·`chore` 등 미노출 접두어 커밋에는 적용 안 됨)
+- 문서가 배포물에 포함되는 프로젝트(패키지에 README 포함 등): `docs` 항목의 `hidden` 제거 고려
 
 ### 의존성 변경 접두어
 
-- 배포물에 포함되는 의존성 변경: `build(deps)` 사용 → CHANGELOG 노출 및 PATCH 릴리스
-  - `chore(deps)` 사용 시 CHANGELOG 미노출, 단독으로는 릴리스 PR 미생성
-- GitHub Actions 버전 갱신: `ci(deps)` 사용 → 배포물 영향 없으므로 릴리스 대상 제외
+- 배포물에 포함되는 의존성(운영 의존성) 변경: `build(deps)` 사용 → CHANGELOG 노출 및 PATCH 릴리스
+- 개발 의존성(테스트·lint 도구 등) 변경: `chore(deps-dev)` 사용 → 배포물 영향 없으므로 릴리스 대상 제외
+- GitHub Actions 버전 갱신: `ci(deps)` 사용 → 릴리스 대상 제외
 - 자동 업데이트 도구 설정
-  - Renovate: 기본 접두어 `chore` → `semanticCommitType` 변경 필요
-  - Dependabot: `commit-message.prefix`로 지정, `include: scope` 시 `(deps)` 표기
+  - Renovate: `config:recommended` 프리셋 사용 시 운영 의존성 `fix(deps)`, 그 외 `chore(deps)` → `packageRules`로 변경 필요
+    - 최상위 `semanticCommitType`은 프리셋의 `packageRules`에 덮어써져 효과 없음
+    - 의존성 유형(`matchDepTypes`) 이름은 패키지 관리자별로 다름 (npm `dependencies`, Composer `require` 등)
+  - Dependabot: `commit-message.prefix`(운영), `prefix-development`(개발)로 지정, `include: scope` 시 `(deps)`·`(deps-dev)` 표기
 
-Renovate (`renovate.json`)
+Renovate (`renovate.json`, npm 기준)
 
 ```json
 {
-  "semanticCommits": "enabled",
-  "semanticCommitType": "build",
+  "extends": ["config:recommended"],
   "packageRules": [
+    { "matchPackageNames": ["*"], "semanticCommitType": "chore" },
+    { "matchDepTypes": ["dependencies"], "semanticCommitType": "build" },
     { "matchManagers": ["github-actions"], "semanticCommitType": "ci" }
   ]
 }
 ```
 
-Dependabot (`.github/dependabot.yml`)
+Dependabot (`.github/dependabot.yml`, npm 기준)
 
 ```yaml
 version: 2
@@ -77,6 +81,7 @@ updates:
       interval: weekly
     commit-message:
       prefix: build
+      prefix-development: chore
       include: scope
   - package-ecosystem: github-actions
     directory: /
@@ -234,7 +239,7 @@ jobs:
 - PR 제목 [Conventional Commits](https://www.conventionalcommits.org/ko/v1.0.0/) 형식 필수 (squash 병합 커밋 = PR 제목)
   - `feat` → MINOR, 그 외 CHANGELOG 노출 접두어 → PATCH, `!` 표기 → MAJOR
   - `docs`, `ci`, `chore`, `test`, `style`: CHANGELOG 제외, 단독으로는 릴리스 PR 미생성
-  - 의존성 변경: `build(deps)` (GitHub Actions 버전 갱신은 `ci(deps)`)
+  - 의존성 변경: 운영 `build(deps)`, 개발 `chore(deps-dev)`, GitHub Actions `ci(deps)`
 - 릴리스 흐름
   1. `main` 병합 시 릴리스 PR(`chore(main): release vX.Y.Z`) 자동 생성/갱신
   2. 릴리스 PR 병합 시 태그(`vX.Y.Z`) 및 GitHub Release 자동 생성
