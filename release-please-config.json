@@ -16,7 +16,7 @@
         { "type": "revert", "section": "되돌리기" },
         { "type": "refactor", "section": "리팩터링" },
         { "type": "build", "section": "빌드" },
-        { "type": "docs", "section": "문서" },
+        { "type": "docs", "section": "문서", "hidden": true },
         { "type": "ci", "section": "CI/CD", "hidden": true },
         { "type": "chore", "section": "기타", "hidden": true },
         { "type": "test", "section": "테스트", "hidden": true },

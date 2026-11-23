@@ -40,10 +40,52 @@
 | --- | --- | --- |
 | `feat!:`, `fix(scope)!:`, 본문 `BREAKING CHANGE:` | MAJOR | 노출 |
 | `feat` | MINOR | 노출 (새 기능) |
-| `fix`, `perf`, `revert`, `refactor`, `build`, `docs` | PATCH | 노출 |
-| `ci`, `chore`, `test`, `style` | 없음 (단독 병합 시 릴리스 PR 미생성) | 미노출 |
+| `fix`, `perf`, `revert`, `refactor`, `build` | PATCH | 노출 |
+| `docs`, `ci`, `chore`, `test`, `style` | 없음 (단독 병합 시 릴리스 PR 미생성) | 미노출 |
 
 - 버전 직접 지정: 커밋 본문에 `Release-As: X.Y.Z` footer 추가 (CHANGELOG 노출 접두어 커밋 한정)
+
+### 의존성 변경 접두어
+
+- 배포물에 포함되는 의존성 변경: `build(deps)` 사용 → CHANGELOG 노출 및 PATCH 릴리스
+  - `chore(deps)` 사용 시 CHANGELOG 미노출, 단독으로는 릴리스 PR 미생성
+- GitHub Actions 버전 갱신: `ci(deps)` 사용 → 배포물 영향 없으므로 릴리스 대상 제외
+- 자동 업데이트 도구 설정
+  - Renovate: 기본 접두어 `chore` → `semanticCommitType` 변경 필요
+  - Dependabot: `commit-message.prefix`로 지정, `include: scope` 시 `(deps)` 표기
+
+Renovate (`renovate.json`)
+
+```json
+{
+  "semanticCommits": "enabled",
+  "semanticCommitType": "build",
+  "packageRules": [
+    { "matchManagers": ["github-actions"], "semanticCommitType": "ci" }
+  ]
+}
+```
+
+Dependabot (`.github/dependabot.yml`)
+
+```yaml
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build
+      include: scope
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
+      include: scope
+```
 
 ## 적용 방법
 
@@ -181,7 +223,7 @@ jobs:
   - 태그 기반 후속 작업은 같은 workflow 내 후속 job으로 처리 권장
 - 커밋 1개인 PR은 squash 병합 시 커밋 메시지가 기본 병합 메시지로 사용 → 커밋 메시지도 Conventional Commits 형식 유지 (기본 커밋 메시지를 PR 제목으로 설정 시 해당 없음)
 - action 버전은 태그(`@v5`) 대신 커밋 SHA로 고정 (쓰기 권한 + self-hosted 러너 실행 → 태그 변조 시 영향 큼)
-  - 버전 갱신: Dependabot(`package-ecosystem: github-actions`) 활용 권장
+  - 버전 갱신: Dependabot(`package-ecosystem: github-actions`) 활용 권장 (커밋 접두어: [의존성 변경 접두어](#의존성-변경-접두어) 참고)
 
 ## 프로젝트 README 기재 예시
 
@@ -191,7 +233,8 @@ jobs:
 - [release-please](https://github.com/googleapis/release-please) 기반 버전 관리 (`.github/workflows/release-please.yml`)
 - PR 제목 [Conventional Commits](https://www.conventionalcommits.org/ko/v1.0.0/) 형식 필수 (squash 병합 커밋 = PR 제목)
   - `feat` → MINOR, 그 외 CHANGELOG 노출 접두어 → PATCH, `!` 표기 → MAJOR
-  - `ci`, `chore`, `test`, `style`: CHANGELOG 제외, 단독으로는 릴리스 PR 미생성
+  - `docs`, `ci`, `chore`, `test`, `style`: CHANGELOG 제외, 단독으로는 릴리스 PR 미생성
+  - 의존성 변경: `build(deps)` (GitHub Actions 버전 갱신은 `ci(deps)`)
 - 릴리스 흐름
   1. `main` 병합 시 릴리스 PR(`chore(main): release vX.Y.Z`) 자동 생성/갱신
   2. 릴리스 PR 병합 시 태그(`vX.Y.Z`) 및 GitHub Release 자동 생성
