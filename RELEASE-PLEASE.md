@@ -43,7 +43,8 @@
 | `fix`, `perf`, `revert`, `refactor`, `build` | PATCH | 노출 |
 | `docs`, `ci`, `chore`, `test`, `style` | 없음 (단독 병합 시 릴리스 PR 미생성) | 미노출 |
 
-- 버전 직접 지정: 커밋 본문에 `Release-As: X.Y.Z` footer 추가 (CHANGELOG 노출 접두어 커밋 한정, `docs`·`chore` 등 미노출 접두어 커밋에는 적용 안 됨)
+- 버전 직접 지정: 커밋 본문에 `Release-As: X.Y.Z` footer 추가 (CHANGELOG 노출 접두어 커밋에 기재)
+  - `docs`·`chore` 등 미노출 접두어 커밋만 있으면 CHANGELOG 비어 릴리스 PR 미생성 → 지정 버전 반영 안 됨
 - 문서가 배포물에 포함되는 프로젝트(패키지에 README 포함 등): `docs` 항목의 `hidden` 제거 고려
 
 ### 의존성 변경 접두어
@@ -54,6 +55,7 @@
 - 자동 업데이트 도구 설정
   - Renovate: `config:recommended` 프리셋 사용 시 운영 의존성 `fix(deps)`, 그 외 `chore(deps)` → `packageRules`로 변경 필요
     - 최상위 `semanticCommitType`은 프리셋의 `packageRules`에 덮어써져 효과 없음
+    - `packageRules`는 뒤 규칙이 앞 규칙 덮어씀, `matchPackageNames`의 `*` 패턴은 Renovate v38 이상 지원
     - 의존성 유형(`matchDepTypes`) 이름은 패키지 관리자별로 다름 (npm `dependencies`, Composer `require` 등)
   - Dependabot: `commit-message.prefix`(운영), `prefix-development`(개발)로 지정, `include: scope` 시 `(deps)`·`(deps-dev)` 표기
 
@@ -64,6 +66,7 @@ Renovate (`renovate.json`, npm 기준)
   "extends": ["config:recommended"],
   "packageRules": [
     { "matchPackageNames": ["*"], "semanticCommitType": "chore" },
+    { "matchDepTypes": ["devDependencies"], "semanticCommitScope": "deps-dev" },
     { "matchDepTypes": ["dependencies"], "semanticCommitType": "build" },
     { "matchManagers": ["github-actions"], "semanticCommitType": "ci" }
   ]
@@ -125,7 +128,7 @@ updates:
 | `release-type` | `<프로젝트 유형>` | 버전 갱신 대상 파일 결정 (필수, [release-type 선택](#release-type-선택) 참고) |
 | `package-name` | `<프로젝트 명>` | 릴리스 PR, CHANGELOG에 표시되는 이름 |
 | `changelog-path` | `CHANGELOG.md` | CHANGELOG 파일 경로 |
-| `changelog-sections` | 11개 접두어 | 접두어별 CHANGELOG 제목(한국어), `hidden: true` 시 미노출 및 버전 증가 대상 제외 |
+| `changelog-sections` | 11개 접두어 | 접두어별 CHANGELOG 제목(한국어), `hidden: true` 시 CHANGELOG 미노출, 해당 접두어만 병합 시 릴리스 PR 미생성 (노출 접두어와 함께 병합 시 릴리스에 포함) |
 | `initial-version` | (미지정) | 첫 릴리스 버전, 미지정 시 `1.0.0` |
 | `bootstrap-sha` | (미지정) | 첫 릴리스 PR의 커밋 수집 시작점 |
 
