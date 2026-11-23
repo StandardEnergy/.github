@@ -72,6 +72,7 @@
 | 항목 | 샘플 값 | 설명 |
 | --- | --- | --- |
 | `include-component-in-tag` | `false` | 태그 형식 `vX.Y.Z` (기본값 `<컴포넌트>-vX.Y.Z`) |
+| `always-update` | `true` | 릴리스 노트 변화 없어도 실행마다 릴리스 PR을 최신 기본 브랜치 기준으로 재생성 (기본값 `false`, [주의 사항](#주의-사항) 참고) |
 | `pull-request-title-pattern` | `chore${scope}: release v${version}` | 릴리스 PR 제목, 조직 PR 제목 규칙(Conventional Commits)과 일치 (`${scope}` → 대상 브랜치, 예: `(main)`) |
 | `pull-request-header` | `릴리스 PR — ...` | 릴리스 PR 본문 상단 안내 문구 (기본값은 영문) |
 | `release-type` | `<프로젝트 유형>` | 버전 갱신 대상 파일 결정 (필수, [release-type 선택](#release-type-선택) 참고) |
@@ -169,6 +170,10 @@ jobs:
 
 ## 주의 사항
 
+- 연속 병합 시 릴리스 PR에 이전 시점 버전 파일 반영 가능 → `always-update: true` 유지
+  - 실행 도중 다음 PR 병합 시 커밋 목록(릴리스 노트)은 최신, 버전 파일(`package.json` 등)은 이전 시점 기준으로 릴리스 커밋 생성
+  - `always-update` 미지정 시 다음 실행은 릴리스 노트 동일 → 릴리스 PR 갱신 안 함 (`remained the same`)
+  - 증상 예: Dependabot PR 연속 병합 후 릴리스 PR의 의존성 버전 되돌아감 → lockfile 불일치로 CI 실패
 - 릴리스 PR 병합 전 마지막 PR의 workflow 실행 완료 확인
   - 실행 완료 전 병합 시 해당 PR이 코드에는 포함되나 CHANGELOG·릴리스 노트에서 누락 (다음 릴리스에도 미표시)
 - `GITHUB_TOKEN`으로 생성한 릴리스 PR·태그는 다른 workflow(CI, 태그 push 트리거 배포 등)를 실행하지 않음
