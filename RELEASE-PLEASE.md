@@ -63,6 +63,19 @@
     - `groups`로 묶을 때 운영·개발 의존성이 한 PR에 섞이면 접두어는 하나만 붙음 → 한쪽 변경이 릴리스 분류와 어긋남 (개발 의존성이 PATCH 릴리스에 포함되거나 운영 의존성이 누락)
       - 그룹을 `dependency-type`(`production`·`development`)별로 분리 (npm 등 확인, 미지원 생태계는 병합 전 PR 제목 확인)
     - 설정 변경 전에 열린 Dependabot PR은 제목 그대로 유지 → 병합 후 각 PR에 `@dependabot recreate` 댓글로 재생성
+  - 조직 Dependabot 묶음 기준 (전 저장소 · 전 생태계 공통)
+    - 패치 갱신: 그룹으로 묶어 PR 1개 (운영·개발 분리 가능한 생태계는 분리)
+    - 마이너 갱신: 개별 PR (동작 변경 가능성 → 건별 검토 · 되돌리기 쉽게)
+    - 주 버전 갱신: 개별 PR, 미룰 패키지는 해당 PR 에 `@dependabot ignore this major version` 댓글로 건별 제외
+      - 주 버전 무시(`ignore` 에 `semver-major`) 는 신규 주 버전 · 보안 수정 누락 위험 → DB 이미지 등 수동 검토가 필요한 패키지에만 지정
+      - 전체(`dependency-name: "*"`) 무시는 저장소별 사유가 있는 경우만 유지, 사유를 주석으로 기재
+    - `open-pull-requests-limit`: 기본값 5 유지 (생태계 항목별 적용, 초과분은 기존 PR 처리 후 생성)
+    - 예외: 함께 갱신해야 하는 의존성은 갱신 유형 무관 그룹 유지 (주석에 사유 기재)
+      - 패키지끼리 버전 일치 필요 (예: `@tiptap/*`)
+      - `directories` 여러 폴더에 같은 이미지 → 그룹 밖 갱신은 폴더별 개별 PR → 함께 바꿔야 하는 이미지(예: 여러 앱의 node 이미지 + `.nvmrc`)는 `patterns` 그룹
+      - digest 고정 이미지(`@sha256:`) → digest 만 바뀌는 갱신은 갱신 유형 판단 불가 → 그룹 `update-types` 생략
+    - GitHub Actions 는 대부분 주 버전 태그(`@v4`) 참조 → 패치 묶음은 전체 버전 · SHA 고정 action 에만 적용
+    - 그룹 이름 변경 시 기존 이름의 묶음 PR 은 재생성 불가 → 설정 병합 후 직접 닫고 다음 실행 대기
 
 Renovate (`renovate.json`, npm 기준)
 
@@ -91,14 +104,14 @@ updates:
       prefix: build
       prefix-development: chore
       include: scope
-    # 묶음 PR 사용 시 운영·개발 의존성 그룹 분리 (접두어 구분)
+    # 패치 갱신 → 운영·개발 의존성별 PR 1개씩 묶음 (커밋 접두어 구분), 마이너·주 버전 갱신 → 개별 PR
     groups:
-      npm-minor-patch:
+      npm-patch:
         dependency-type: production
-        update-types: [minor, patch]
-      npm-dev-minor-patch:
+        update-types: [patch]
+      npm-dev-patch:
         dependency-type: development
-        update-types: [minor, patch]
+        update-types: [patch]
   - package-ecosystem: github-actions
     directory: /
     schedule:
@@ -106,6 +119,10 @@ updates:
     commit-message:
       prefix: ci
       include: scope
+    # 패치 갱신 → PR 1개로 묶음, 마이너·주 버전 갱신 → 개별 PR
+    groups:
+      actions-patch:
+        update-types: [patch]
 ```
 
 ## 적용 방법
